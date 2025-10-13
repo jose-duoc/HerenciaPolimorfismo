@@ -47,14 +47,80 @@ public class PantallaPrincipal extends JFrame{
         gbc.gridx = 1;
         add(txtMonto, gbc);
         
-        // Monto2
+        //Número de tarjeta
         gbc.gridx = 0; gbc.gridy = 3;
-        add(new JLabel("Monto:"),gbc);
-        txtMonto = new JTextField();
+        lblDatoExtra = new JLabel("Número de tarjeta");
+        add(lblDatoExtra,gbc);
+        txtDatoExtra = new JTextField();
         gbc.gridx = 1;
-        add(txtMonto, gbc);
+        add(txtDatoExtra,gbc);
+        
+        // botón registrar pago
+        btnPagar = new JButton("Pagar");
+        gbc.gridx= 0; gbc.gridy = 4; gbc.gridwidth = 2; 
+        add(btnPagar,gbc);
+        
+       txtResultado = new JTextArea(5,20);
+       txtResultado.setEditable(false);
+       txtResultado.setWrapStyleWord(true);
+       gbc.gridy = 5;
+       add(new JScrollPane(txtResultado),gbc);
+       
+       //seleccionar el elemento del combo
+       comboOpciones.addActionListener(new ActionListener(){
+           public void actionPerformed(ActionEvent e){
+               actualizarCampo();
+           }
+       });
+       
+       //Capturar evento del botón
+       btnPagar.addActionListener(new ActionListener(){
+           public void actionPerformed(ActionEvent e){
+               procesarPago();
+           }
+       });
     }
-    
+ 
+    private void actualizarCampo(){
+        String opcion = (String) comboOpciones.getSelectedItem();
+        if(opcion.contains("Pago con Tarjeta")){
+            lblDatoExtra.setText("Número de tarjeta:");
+            txtDatoExtra.setEnabled(true);
+        }else if (opcion.contains("PayPal")){
+            lblDatoExtra.setText("Email:");
+            lblDatoExtra.setEnabled(true);
+        }else{
+            lblDatoExtra.setText("No se requiere dato adicional");
+            txtDatoExtra.setText("");
+            txtDatoExtra.setEnabled(false);
+        }
+    }
+    private void procesarPago(){
+        try{
+            double monto = Double.parseDouble(txtMonto.getText());
+            String opcion = (String) comboOpciones.getSelectedItem();
+            String datoExtra = txtDatoExtra.getText();
+            String mensaje = "";
+            Pagable pago;
+            if(opcion.contains("Tarjeta")){
+                pago = new Tarjeta(monto, datoExtra);
+                mensaje = "Pagando $" + monto + "con Tarjeta número: "+ datoExtra;
+            }else if (opcion.contains("PayPal")){
+                pago = new Paypal(monto, datoExtra);
+                mensaje = "Pagando $"+ monto + "mediante PayPal ("+datoExtra+")";
+            }else{
+                pago = new Efectivo(monto);
+                mensaje = "Pagando $"+ monto + "En Efectivo";
+            }
+            pago.pagar();
+            
+            txtResultado.append(mensaje + "\n");
+            
+        }
+        catch(NumberFormatException ex){
+            JOptionPane.showMessageDialog(this,"Ingrese un monto valido", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
     public static void main(String[] args){
         SwingUtilities.invokeLater(new Runnable(){
             public void run(){
